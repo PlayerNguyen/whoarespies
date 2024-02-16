@@ -1,4 +1,4 @@
-import { Box, Button, Stack, Text, Title } from "@mantine/core";
+import { Box, Button, CopyButton, Stack, Text, Title } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import { useContext, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -65,7 +65,7 @@ export default function AppGame() {
 
   return (
     data && (
-      <div className="flex justify-center items-center min-h-[100vh] min-w-[100vw]">
+      <div className="flex flex-col justify-center items-center min-h-[100vh] min-w-[100vw] gap-1">
         <Box
           bg={"#f5f5f5"}
           miw={"80vw"}
@@ -73,9 +73,43 @@ export default function AppGame() {
           py={"md"}
           className="rounded-xl"
         >
-          <Stack>
-            <Title order={3}>Trò chơi</Title>
+          <Stack gap={2}>
+            <Title order={3}>
+              Trò chơi{" "}
+              <CopyButton value={id}>
+                {({ copy, copied }) => {
+                  return (
+                    <>
+                      <Button
+                        variant="filled"
+                        size="compact-sm"
+                        color="primary"
+                        onClick={copy}
+                      >
+                        {copied ? <>Đã sao chép</> : <>#{id}</>}
+                      </Button>
+                    </>
+                  );
+                }}
+              </CopyButton>
+            </Title>
+            <Text>Tên người chơi {username}</Text>
           </Stack>
+        </Box>
+        <Box
+          bg={"#f5f5f5"}
+          miw={"80vw"}
+          px={"lg"}
+          py={"md"}
+          className="rounded-xl flex "
+        >
+          <Box bg={"#fcfcfc"} px={"lg"} py={"md"} className="rounded-xl ">
+            <Text>Player 1</Text>
+            <Text>Player 1</Text>
+            <Text>Player 1</Text>
+            <Text>Player 1</Text>
+            <Text>Player 1</Text>
+          </Box>
         </Box>
       </div>
     )
