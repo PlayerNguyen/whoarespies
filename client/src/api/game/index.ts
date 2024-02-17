@@ -1,7 +1,7 @@
 import { axiosInstance } from "../../utils/axios";
 
-function createGame() {
-  return axiosInstance.post("/game");
+function createGame(author: string) {
+  return axiosInstance.post("/game", { owner: author });
 }
 
 function getGame(id: string) {

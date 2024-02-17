@@ -19,7 +19,7 @@ export default function AppMainMenu() {
   const navigate = useNavigate();
 
   const handleCreate = () => {
-    createGame().then((response) => {
+    createGame(username as string).then((response) => {
       const { id } = response.data;
       toast.success(`Đã tạo phòng mới`);
 

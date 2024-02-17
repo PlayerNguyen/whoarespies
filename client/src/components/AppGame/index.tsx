@@ -1,15 +1,23 @@
 import { Box, Button, CopyButton, Stack, Text, Title } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
-import { useContext, useEffect } from "react";
+import dayjs from "dayjs";
+import { useContext, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { GameAPI } from "../../api/game";
+import ChatsContext from "../../context/ChatsContext";
 import UsernameContext from "../../context/UsernameContext";
+import useChat from "../../hooks/useChat";
+import usePassiveHandleEvent from "../../hooks/usePassiveHandleEvent";
 import { socket } from "../../utils/socket";
 
 export default function AppGame() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { username } = useContext(UsernameContext);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const { chats } = useContext(ChatsContext);
+  const { addChat } = useChat();
 
   if (id === undefined)
     return (
@@ -52,16 +60,40 @@ export default function AppGame() {
   }
 
   useEffect(() => {
-    socket.on("connect", () => {
-      console.log(`Successfully handshake to the game server ${Date.now()}`);
-    });
+    function onConnect() {
+      console.log(`Successfully hand-shaking to the game server ${Date.now()}`);
+    }
 
-    socket.emit("join", { username, room: id });
+    socket.on("connect", onConnect);
+    socket.emit(
+      "join",
+      { username, room: id },
+      (response: SocketResponse<{ game: Game }>) => {
+        // Refresh a player list
+        setPlayers(
+          response.data.game.players.map((player) => ({
+            name: player.name,
+            id: player.id,
+          }))
+        );
+      }
+    );
 
     return () => {
-      socket.removeListener("connect");
+      socket.off("connect", onConnect);
     };
   }, []);
+
+  /**
+   * Handle player joining
+   */
+  const onPlayerJoin: PlayerJoinCallback = (_player, game) => {
+    // Re-render players list
+    setPlayers(game.players);
+    toast(`Người chơi ${_player.name} đã tham gia.`);
+    addChat(`Người chơi ${_player.name} đã tham gia vào trò chơi.`);
+  };
+  usePassiveHandleEvent("player-join", onPlayerJoin);
 
   return (
     data && (
@@ -93,7 +125,9 @@ export default function AppGame() {
                 }}
               </CopyButton>
             </Title>
-            <Text>Tên người chơi {username}</Text>
+            <Text>
+              Tên người chơi <b>{username}</b>
+            </Text>
           </Stack>
         </Box>
         <Box
@@ -101,14 +135,50 @@ export default function AppGame() {
           miw={"80vw"}
           px={"lg"}
           py={"md"}
-          className="rounded-xl flex "
+          mih={"80vh"}
+          mah={"80vh"}
+          className="rounded-xl flex gap-2"
         >
-          <Box bg={"#fcfcfc"} px={"lg"} py={"md"} className="rounded-xl ">
+          <Box
+            bg={"#fcfcfc"}
+            px={"lg"}
+            py={"md"}
+            className="rounded-xl overflow-auto w-1/3"
+          >
+            {/* <Text>Player 1</Text>
             <Text>Player 1</Text>
             <Text>Player 1</Text>
             <Text>Player 1</Text>
-            <Text>Player 1</Text>
-            <Text>Player 1</Text>
+            <Text>Player 1</Text> */}
+            {players.map((player) => {
+              return <Text key={player.id}>{player.name}</Text>;
+            })}
+          </Box>
+          <Box bg={"#fcfcfc"} px={"lg"} py={"md"} className="rounded-xl w-full">
+            <Title>Chat</Title>
+
+            {chats &&
+              chats.map((chat) => {
+                if (chat.type === "announcement") {
+                  return (
+                    <Text key={chat.date.toTimeString()} c={"#c3c3c3"}>
+                      {dayjs(chat.date).format("HH:mm:ss")}{" "}
+                      <b>{chat.message}</b>
+                    </Text>
+                  );
+                }
+
+                return (
+                  <Text key={chat.date.toTimeString()}>
+                    {chat.date.toDateString()} {chat.message}
+                  </Text>
+                );
+              })}
+            {/* <Text>Test</Text>
+              <Text>Test</Text>
+              <Text>Test</Text>
+              <Text>Test</Text>
+              <Text>Test</Text> */}
           </Box>
         </Box>
       </div>

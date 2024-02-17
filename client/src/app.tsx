@@ -11,6 +11,7 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import AppGame from "./components/AppGame";
 import AppMainMenu from "./components/AppMainMenu";
 import NamePicker from "./components/NamePicker";
+import ChatsContext from "./context/ChatsContext";
 import UsernameContext from "./context/UsernameContext";
 import useUsername from "./hooks/useUsername";
 import "./index.css";
@@ -52,17 +53,20 @@ export default function App() {
   const [username, setUsername] = useState<string | undefined>(
     getStoredUsername()
   );
+  const [chats, setChats] = useState<Chat[]>([]);
   return (
     <QueryClientProvider client={queryClient}>
       <MantineProvider theme={theme}>
         <UsernameContext.Provider value={{ setUsername, username }}>
-          {username === undefined ? (
-            <div className="min-h-[100vh] min-w-[100vw] flex justify-center items-center">
-              <NamePicker />
-            </div>
-          ) : (
-            <RouterProvider router={router} />
-          )}
+          <ChatsContext.Provider value={{ chats, setChats }}>
+            {username === undefined ? (
+              <div className="min-h-[100vh] min-w-[100vw] flex justify-center items-center">
+                <NamePicker />
+              </div>
+            ) : (
+              <RouterProvider router={router} />
+            )}
+          </ChatsContext.Provider>
         </UsernameContext.Provider>
         <Toaster position="bottom-center" reverseOrder={false} />
       </MantineProvider>

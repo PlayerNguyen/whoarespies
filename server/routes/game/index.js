@@ -4,7 +4,16 @@ import { Game, getGameManager } from "../../src/game.js";
 const GameRouter = express.Router();
 
 GameRouter.post("/", (req, res) => {
+  const body = req.body;
+
+  if (body === undefined || body.owner === undefined) {
+    res.json({ error: "The `owner` field is required in body." });
+    return;
+  }
+
+  const { owner } = body;
   const createdGame = getGameManager().createGame();
+  createdGame.setOwner(owner);
 
   console.log(`Creating a new room with id ${createdGame.getCode()}`);
   res.json({ id: createdGame.code });
